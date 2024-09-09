@@ -1,0 +1,76 @@
+#include <WiFi.h>                // Include the Wi-Fi library
+#include <Wire.h>                // Include the Wire library for I2C communication
+#include <Adafruit_GFX.h>        // Include the Adafruit GFX library for OLED
+#include <Adafruit_SSD1306.h>    // Include the Adafruit SSD1306 library for OLED
+#include "secrets.h"
+
+#define SCREEN_WIDTH 128         // OLED display width, in pixels
+#define SCREEN_HEIGHT 64         // OLED display height, in pixels
+#define OLED_RESET    -1         // Reset pin (or -1 if sharing Arduino reset pin)
+#define OLED_SDA      21         // SDA pin (GPIO 21 for ESP32-C3)
+#define OLED_SCL      20         // SCL pin (GPIO 20 for ESP32-C3)
+
+// Create an instance of the SSD1306 display
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// Replace with your network credentials
+//const char* ssid = "your_SSID";
+//const char* password = "your_PASSWORD";
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(115200);
+
+  // Initialize I2C communication with the specified SDA and SCL pins
+  Wire.begin(OLED_SDA, OLED_SCL);
+
+  // Initialize the OLED display
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);  // Loop forever if OLED initialization fails
+  }
+
+  // Clear the buffer
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  // Connect to Wi-Fi
+  Serial.println("Connecting to Wi-Fi...");
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println("\nConnected to Wi-Fi");
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Wi-Fi Connected!");
+  display.display();
+  delay(2000);  // Display connection message for 2 seconds
+}
+
+void loop() {
+  // Get Wi-Fi signal strength (RSSI)
+  long rssi = WiFi.RSSI();
+  
+  // Clear the display
+  display.clearDisplay();
+
+  // Display the Wi-Fi signal strength
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.print("Wi-Fi Strength:");
+  display.setTextSize(2);
+  display.setCursor(0, 20);
+  display.print(rssi);
+  display.print(" dBm");
+
+  // Display it on the OLED
+  display.display();
+
+  // Update every second
+  delay(1000);
+}
